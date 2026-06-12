@@ -11,6 +11,7 @@ import (
 	"crypto/rsa"
 	"io"
 	"net"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -181,7 +182,14 @@ func TestPickKeySelector(t *testing.T) {
 // serveAgent exposes an agent on a unix socket and points SSH_AUTH_SOCK at it.
 func serveAgent(t *testing.T, kr agent.Agent) string {
 	t.Helper()
-	sock := filepath.Join(t.TempDir(), "agent.sock")
+	// macOS caps unix socket paths at 104 bytes (sun_path); avoid t.TempDir()
+	// which embeds the long test name. Use a short base dir + short filename.
+	dir, err := os.MkdirTemp("", "ap")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(dir) })
+	sock := filepath.Join(dir, "s")
 	l, err := net.Listen("unix", sock)
 	if err != nil {
 		t.Fatal(err)
