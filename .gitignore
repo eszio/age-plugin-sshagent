@@ -1,0 +1,6 @@
+/age-plugin-sshagent
+dist/
+*.age
+.idea/
+.vscode/
+*.swp

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Install age (ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get update && sudo apt-get install -y age
+
+      - name: Install age (macos)
+        if: matrix.os == 'macos-latest'
+        run: brew install age
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Format check
+        run: test -z "$(gofmt -l .)"
+
+      - name: Test
+        run: go test ./...
